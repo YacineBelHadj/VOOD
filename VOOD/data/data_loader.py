@@ -37,15 +37,18 @@ class DataLoader:
             return None
         return readTDMS(path)
 
-    def _load(self, start: datetime, end: datetime) -> dict:
+    def _load(self, start, end):
         """Load data from start to end"""
         data = {}
         dt = start
         while dt < end:
             data_temp = self._load_single(dt)
             if data_temp is None:
-                return None
-            data = append_dict(data, data_temp)
+                return None 
+            if len(data) == 0:
+                data = data_temp
+            else:
+                data= append_dict(data,data_temp)
             dt += self.time_step
         return data
 
@@ -71,5 +74,5 @@ class DataLoader:
 if __name__ == '__main__':
     sensor = Sensor(name='ACC', location='MO04', data_type='TDD', format='.tdms')
     loader = DataLoader(sensor=sensor)
-    data = loader.get_data('2022-04-01 00:00:00')
+    data = loader.get_data('2022-04-20 00:00:00', '2022-04-20 00:10:00')
     print(data)
