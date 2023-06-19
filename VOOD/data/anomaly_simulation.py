@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.signal import find_peaks
 from scipy.interpolate import interp1d
 
 def simulate_anomaly(Pxx_den:np.ndarray,
