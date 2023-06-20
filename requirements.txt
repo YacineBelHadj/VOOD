@@ -1,0 +1,167 @@
+anyio==3.6.2
+appdirs==1.4.4
+argon2-cffi==21.3.0
+argon2-cffi-bindings==21.2.0
+arrow==1.2.3
+asttokens==2.2.1
+attrs==22.2.0
+backcall==0.2.0
+beautifulsoup4==4.11.1
+binaryornot==0.4.4
+bleach==5.0.1
+brotlipy==0.7.0
+certifi @ file:///croot/certifi_1683875369620/work/certifi
+cffi @ file:///croot/cffi_1670423208954/work
+chardet==5.1.0
+charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
+click @ file:///tmp/build/80754af9/click_1646056706450/work
+cloudpickle @ file:///croot/cloudpickle_1683040006038/work
+cmake==3.26.4
+colorama==0.4.6
+colorlog==6.7.0
+comm==0.1.2
+contourpy==1.1.0
+cookiecutter==2.1.1
+cryptography @ file:///croot/cryptography_1686613057838/work
+cycler==0.11.0
+cytoolz @ file:///croot/cytoolz_1667465931118/work
+dask @ file:///croot/dask-core_1686782904390/work
+debugpy==1.6.4
+decorator==5.1.1
+defusedxml==0.7.1
+dynaconf==3.1.12
+easydev==0.12.1
+entrypoints==0.4
+executing==1.2.0
+fastjsonschema==2.16.2
+filelock==3.12.2
+fonttools==4.40.0
+fqdn==1.5.1
+fsspec @ file:///croot/fsspec_1682525977151/work
+h5py==3.8.0
+idna @ file:///croot/idna_1666125576474/work
+imagecodecs @ file:///croot/imagecodecs_1677576717595/work
+imageio @ file:///croot/imageio_1677879560821/work
+importlib-metadata @ file:///croot/importlib-metadata_1678997070253/work
+ipykernel==6.19.4
+ipython==8.8.0
+ipython-genutils==0.2.0
+ipywidgets==8.0.4
+isoduration==20.11.0
+jedi==0.18.2
+Jinja2==3.1.2
+jinja2-time==0.2.0
+joblib==1.2.0
+jsonpointer==2.3
+jsonschema==4.17.3
+jupyter==1.0.0
+jupyter-console==6.4.4
+jupyter-events==0.5.0
+jupyter_client==7.4.8
+jupyter_core==5.1.2
+jupyter_server==2.0.6
+jupyter_server_terminals==0.4.3
+jupyterlab-pygments==0.2.2
+jupyterlab-widgets==3.0.5
+kiwisolver==1.4.4
+lazy_loader @ file:///croot/lazy_loader_1679411877197/work
+lit==16.0.6
+locket @ file:///opt/conda/conda-bld/locket_1652903118915/work
+MarkupSafe==2.1.3
+matplotlib==3.7.1
+matplotlib-inline==0.1.6
+mistune==2.0.4
+mkl-fft==1.3.6
+mkl-random @ file:///work/mkl/mkl_random_1682950433854/work
+mkl-service==2.4.0
+mpmath==1.3.0
+nbclassic==0.4.8
+nbclient==0.7.2
+nbconvert==7.2.8
+nbformat==5.7.1
+nest-asyncio==1.5.6
+networkx @ file:///croot/networkx_1678964333703/work
+notebook==6.5.2
+notebook_shim==0.2.2
+npTDMS==1.6.2
+numpy @ file:///work/mkl/numpy_and_numpy_base_1682953417311/work
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-cupti-cu11==11.7.101
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
+nvidia-cufft-cu11==10.9.0.58
+nvidia-curand-cu11==10.2.10.91
+nvidia-cusolver-cu11==11.4.0.1
+nvidia-cusparse-cu11==11.7.4.91
+nvidia-nccl-cu11==2.14.3
+nvidia-nvtx-cu11==11.7.91
+packaging @ file:///croot/packaging_1678965309396/work
+pandas==2.0.2
+pandocfilters==1.5.0
+parso==0.8.3
+partd @ file:///opt/conda/conda-bld/partd_1647245470509/work
+pexpect==4.8.0
+pickleshare==0.7.5
+Pillow==9.4.0
+platformdirs==2.6.2
+pooch @ file:///tmp/build/80754af9/pooch_1623324770023/work
+prometheus-client==0.15.0
+prompt-toolkit==3.0.36
+psutil==5.9.4
+ptyprocess==0.7.0
+pure-eval==0.2.2
+pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
+Pygments==2.14.0
+pyOpenSSL @ file:///croot/pyopenssl_1677607685877/work
+pyparsing==3.0.9
+pyrsistent==0.19.3
+PySocks @ file:///home/builder/ci_310/pysocks_1640793678128/work
+python-dateutil==2.8.2
+python-json-logger==2.0.4
+python-slugify==8.0.1
+pytz==2023.3
+PyWavelets @ file:///croot/pywavelets_1670425177960/work
+PyYAML==6.0
+pyzmq==24.0.1
+qtconsole==5.4.0
+QtPy==2.3.0
+requests @ file:///croot/requests_1682607517574/work
+rfc3339-validator==0.1.4
+rfc3986-validator==0.1.1
+scikit-image @ file:///croot/scikit-image_1682528309703/work
+scikit-learn==1.2.2
+scipy==1.10.1
+Send2Trash==1.8.0
+six==1.16.0
+sniffio==1.3.0
+soupsieve==2.3.2.post1
+spectrum==0.8.1
+stack-data==0.6.2
+sympy==1.12
+terminado==0.17.1
+text-unidecode==1.3
+threadpoolctl==3.1.0
+tifffile @ file:///tmp/build/80754af9/tifffile_1627275862826/work
+tinycss2==1.2.1
+toolz @ file:///croot/toolz_1667464077321/work
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
+tornado==6.2
+tqdm==4.65.0
+traitlets==5.8.0
+triton==2.0.0
+tsaug==0.2.1
+typing_extensions==4.6.3
+tzdata==2023.3
+uri-template==1.2.0
+urllib3 @ file:///croot/urllib3_1686163155763/work
+vibration-toolbox==0.6.10
+-e git+ssh://git@github.com/YacineBelHadj/VOOD.git@c4d4c5e59daf5b0191f294418409071db297cc32#egg=VOOD
+wcwidth==0.2.5
+webcolors==1.12
+webencodings==0.5.1
+websocket-client==1.4.2
+widgetsnbextension==4.0.5
+zipp @ file:///croot/zipp_1672387121353/work
