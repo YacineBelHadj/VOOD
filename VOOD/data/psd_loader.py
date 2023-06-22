@@ -1,71 +1,168 @@
 """ Here we will build a dataLoader for the psd files."""
+import cProfile
+import pstats
+
+
+from functools import cached_property
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 import h5py
 from pathlib import Path
 from datetime import datetime
-from typing import  Tuple
-from typing import Tuple
+from typing import  Tuple, List, Optional, Union
 from pathlib import Path
 from datetime import datetime
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import h5py
-from config import settings, events
+from config import settings, parse_datetime_strings
 import numpy as np
-from VOOD.c
+import torch
+import h5py
+import json
+import pyarrow.parquet as pq
 
-class DatasetPSD(Dataset):
-    """Dataset of PSDs, with the following parameters:
-    filename: Path to the file containing the PSDs
-    datetime_range: tuple of datetime objects, the first and last datetime of the dataset
-    """
-    def __init__(self, filename: Path or str, datetime_range: Tuple[datetime, datetime]) -> None:
-        self.datetime_range = datetime_range
+class PSDDataset(Dataset):
+    def __init__(self, filename: Union[Path, str], datetime_range: Tuple[datetime, datetime],
+                 drop: List[str] = None, transform=None, label_transform=None) -> None:
         self.filename = filename
-        with h5py.File(filename, 'r') as f:
-            psd_group = f['PSDs']
-            self.keys = [key for key in psd_group.keys() if datetime_range[0] <= psd_group[key].attrs['time'] <= datetime_range[1]]
-    
+        self.transform = transform
+        self.label_transform = label_transform
+        self.drop = set(drop) if drop else set()
+
+        # Open the parquet file once and reuse
+        self.parquet_file = pq.ParquetFile(filename)
+        
+        # Efficiently select row groups within the datetime range
+        start_timestamp = datetime_range[0].timestamp()
+        end_timestamp = datetime_range[1].timestamp()
+        self.keys = []
+        for i in range(self.parquet_file.num_row_groups):
+            row_group = self.parquet_file.metadata.row_group(i)
+            min_time = row_group.column(0).statistics.min
+            max_time = row_group.column(0).statistics.max
+            if min_time <= end_timestamp and max_time >= start_timestamp:
+                self.keys.append(i)
+
+        self.initialize_dicts()
+        
     def __len__(self) -> int:
         return len(self.keys)
-
-    def __getitem__(self, idx) -> dict:
-        key = self.keys[idx]
-        with h5py.File(self.filename, 'r') as f:
-            psd_group = f['PSDs']
-            sample_group = psd_group[key]
-            psds = {sensor_name: torch.tensor(sample_group[sensor_name][:]) for sensor_name in sample_group.keys() if sensor_name != 'frequency'}
-            #freq = torch.tensor(sample_group['frequency'][:])
-            #rms = {sensor_name: sample_group[sensor_name].attrs['rms'] for sensor_name in psds.keys()}
-        return psds
     
-def load_psd_parameter(filename:str|Path) -> dict:
-    res =dict()
-    with h5py.File(filename, 'r') as f:
-        psd_group = f['PSDs']
-        res ['fs'] = psd_group.attrs['fs']
-        res ['frame_size'] = psd_group.attrs['frame(s)']
-        res ['frame_step'] = psd_group.attrs['step(s)']
-        res ['cut_off_freq'] = psd_group.attrs['cut_off_freq']
-        res ['nperseg'] = psd_group.attrs['nperseg']
-    return res
-def load_frequnecy_array(filename:str|Path) -> np.ndarray:
-    with h5py.File(filename, 'r') as f:
-        psd_group = f['PSDs']
-        return np.array(psd_group['frequency'])
+    def initialize_dicts(self):
+        # Read the required row group
+        table = self.parquet_file.read_row_group(self.keys[0])
+        sensor_names = table['sensor_name'].to_pylist()
+        
+        # Flatten the list if it is a list of lists
+        if sensor_names and isinstance(sensor_names[0], list):
+            sensor_names = [item for sublist in sensor_names for item in sublist]
+        
+        # Filter out the sensors not in drop
+        sensor_names = {sensor for sensor in sensor_names if sensor not in self.drop}
+        
+        # Initialize sensor names
+        self._sensor_names = list(sensor_names)
 
-def main():
-    path_psd= Path(settings.default.path['processed_data'])/'PSD_8192.h5'
-    print(load_psd_parameter(path_psd))
-    print(load_frequnecy_array(path_psd))
-    datetime_range = (datetime(2022, 1, 1), datetime(2019, 1, 2))
-    print(events)
+        # Initialize position names and axis names
+        position_names = set()
+        axis_names = set()
+        for sensor in sensor_names:
+            position_names.add(get_sensor_position(sensor))
+            axis_names.add(get_sensor_axis(sensor))
+        
+        # Store them as attributes
+        self._position_names = list(position_names)
+        self._axis_names = list(axis_names)
+        
+        # Initialize mapping dictionaries
+        self._mapping_dict = {sensor: i for i, sensor in enumerate(self._sensor_names)}
+        self._mapping_axis_dict = {axis: i for i, axis in enumerate(self._axis_names)}
+        self._mapping_position_dict = {position: i for i, position in enumerate(self._position_names)}
+
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        key = self.keys[index]
+        
+        # Read the required row group
+        sample = self.parquet_file.read_row_group(key).to_pandas()
+        
+        psd = sample['ACC_psd'].values[0]
+        sensor_name = sample['sensor_name'].values[0]
+        
+        # Flatten the list if it is a list of lists
+        if len(sensor_name) > 0 and isinstance(sensor_name[0], list):
+            sensor_name = [item for sublist in sensor_name for item in sublist]
+        
+        # Make sure that psd is 2D array
+        psd = np.array(psd).reshape(len(sensor_name), -1)
+
+        # Create boolean mask
+        keep_rows = np.array([sensor not in self.drop for sensor in sensor_name])
+        
+        # Filter using boolean mask
+        psd = psd[keep_rows]
+        #sensor_name = [name for name, keep in zip(sensor_name, keep_rows) if keep]
+        sensor_direnction = np.array([self._mapping_axis_dict[get_sensor_axis(sensor)] for sensor in sensor_name])
+        sensor_position = np.array([self._mapping_position_dict[get_sensor_position(sensor)] for sensor in sensor_name])
+
+        # One hot encode the sensor°s position and direction
+        sensor_position = np.eye(len(self._position_names))[sensor_position]
+        sensor_direnction = np.eye(len(self._axis_names))[sensor_direnction]
+
+        # Convert to tensors
+        psd = torch.from_numpy(psd)
+        sensor_position = torch.from_numpy(sensor_position)
+        sensor_direnction = torch.from_numpy(sensor_direnction)
+        # Apply transformations if any
+        if self.transform is not None:
+            psd = self.transform(psd)
+        if self.label_transform is not None:
+            sensor_position = self.label_transform(sensor_position)
+            sensor_direnction = self.label_transform(sensor_direnction)
+        return psd, sensor_position, sensor_direnction
+
+    
+def get_sensor_axis(sensor_name: str):
+    sensor_axis = sensor_name.split('_')[0][-1]
+    return sensor_axis
+def get_sensor_position(sensor_name: str):
+    sensor_position = sensor_name.split('_')[1]
+    return sensor_position
+
+def load_parameter(path: Path) -> dict:
+    with open(path, 'r') as f:
+        return json.load(f)  
+         
+def min_max_scaler(min, max):    
+    def fn(x):
+        return (x - min) / (max - min)
+    return fn
+
+
+def test():
+    path_psd = Path(settings.default.path['processed_data']) / 'PSD_8192.parquet'
+    path_metadata = Path(settings.default.path['processed_data']) / f'metadata_8192.json'
+    #transformer min max scaler in torch
+    parameter = load_parameter(path_metadata)
+    min = parameter['min']
+    max = parameter['max']
+
+
+    training_range = parse_datetime_strings(settings.split.train)
+    datetime_range = (training_range['start'], training_range['end'])
+    # Create dataset
+    dataset = PSDDataset(path_psd, datetime_range,transform=min_max_scaler(min,max), drop=['ACC1_X', 'ACC1_Y'])
+    #compute min and max of the dataset for normalization using dat
+
+    # Create the data loader
+
+
+    dataloader = DataLoader(dataset, batch_size=128)
+    
+    return dataloader, parameter
+
 
 if __name__ == '__main__':
-    main()
-
-    #command line to check available packages
-    #pip freeze > requirements.txt
-    
+    a,b=test()
+    print(b)

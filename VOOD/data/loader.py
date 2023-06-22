@@ -69,6 +69,7 @@ class DataLoader:
             raise ValueError(f'Cannot load more than one day at a time. Got {delta.days} days')
 
         return self._load(start, end)
+    
 
 
 if __name__ == '__main__':

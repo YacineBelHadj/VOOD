@@ -1,6 +1,6 @@
 from typing import Union
 from pathlib import Path
-from nptdms import TdmsFile
+from nptdms import TdmsWriter, TdmsFile
 from datetime import datetime
 import warnings
 import numpy as np
@@ -33,7 +33,38 @@ def readTDMS(path: Union[Path, str]):
     channels = [channel.name for group in data.groups() for channel in group.channels()]
 
     dict_signal = dict(zip(channels, signals))
+    return dict_signal
 
+def saveTDMS(path: Union[Path, str], dict_signal: dict, group_name: str = 'group'):
+    """ Save TDMS file
+    Parameters
+    ----------
+    path : Union[Path, str]
+        Path to the TDMS file
+    dict_signal : dict
+        Dictionary containing signals to be saved
+    group_name : str, optional
+        Name of the group, by default 'group'
+    """
+    if isinstance(path, Path):
+        path = str(path)
+
+    try:
+        data = TdmsFile(path)
+    except (FileNotFoundError, ValueError) as error:
+        warnings.warn(f'FAILED IMPORT: {str(error)}', UserWarning)
+        return {}
+
+    if not data.groups():
+        warnings.warn(f'FAILED IMPORT: No TDMS group found in file: {path}', UserWarning)
+        return {}
+
+    signals = [channel.data for group in data.groups() for channel in group.channels()]
+    channels = [channel.name for group in data.groups() for channel in group.channels()]
+
+    dict_signal = dict(zip(channels, signals))
+    with TdmsWriter(path) as tdms_writer:
+        tdms_writer.write_segment([dict_signal], group_name=group_name)
     return dict_signal
 
 def append_dict(dict1: dict, dict2: dict):
