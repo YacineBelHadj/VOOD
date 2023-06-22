@@ -1,14 +1,22 @@
 from VOOD.model.dense_classification import MultiOutputSignalClassifier
 import torch.nn as nn
+from pathlib import Path
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import torch.nn.functional as F
 import argparse
 import torch
+from VOOD.data.psd_loader import PSDDataset, load_parameter,min_max_scaler
+from config import settings, parse_datetime_strings
+import numpy as np
+path_psd = Path(settings.default.path['processed_data'])/ 'PSD_8192.parquet'
+path_metadata = Path(settings.default.path['processed_data'])/ f'metadata_8192.json'
 
-# parse settings from command line
+training_range = parse_datetime_strings(settings.split.train)
+training_range = (training_range['start'], training_range['end'])
 parser = argparse.ArgumentParser(description='Dense Classification Training with Energy Loss',
 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
 parser.add_argument('--momentum', type=float, default=0.9, help='Momentum.')
 parser.add_argument('--save', '-s', type=str, default='./snapshots/', help='Folder to save checkpoints.')
 parser.add_argument('--decay', '-d', type=float, default=0.0005, help='Weight decay (L2 penalty).')
@@ -24,6 +32,11 @@ state = {k: v for k, v in args._get_kwargs()}
 print(state)
 
 torch.manual_seed(1)
+metadata = load_parameter(path_metadata)
+min_psd = metadata['min']
+max_psd = metadata['max']
+
+train_loader = PSDDataset(path_psd,training_range, transform=min_max_scaler(min_psd,max_psd), drop=['ACC1_X', 'ACC1_Y'])
 
 net= MultiOutputSignalClassifier(num_positions=4, 
                                  num_directions=3, 
@@ -35,20 +48,21 @@ net= MultiOutputSignalClassifier(num_positions=4,
 
 def cosine_annealing(step, total_steps, lr_max, lr_min):
     return lr_min + (lr_max - lr_min) * 0.5 * (
-            1 + F.cos(step / total_steps * F.pi))
+            1 + np.cos(step / total_steps * np.pi))
 optimizer = torch.optim.SGD(net.parameters(), state['learning_rate'], momentum=state['momentum'],
                             weight_decay=state['decay'], nesterov=True)
 scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
                                                 lr_lambda=lambda step: cosine_annealing(
                                                     step,
-                                                    args.epochs * len(train_loader_in),
+                                                    args.epochs * len(train_loader),
                                                     1,  # since lr_lambda computes multiplicative factor
                                                     1e-6 / args.learning_rate))
+
 
 def train():
     net.train()
     loss_avg = 0.0
-    for batch_idx, (data, target) in enumerate(train_loader_in):
+    for batch_idx, (data, target) in enumerate(train_loader):
         y_position = target[0]
         y_direction = target[1]
 
@@ -76,3 +90,5 @@ def test():
 
 
 
+if __name__=='__main__':
+    train()
