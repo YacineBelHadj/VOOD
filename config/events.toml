@@ -39,8 +39,16 @@
     [split.train]
     start = "2022-04-01"
     end = "2022-04-20"
+    
+    [split.validation]
+    start ="2022-04-20"
+    end ="2022-04-21"
 
     [split.test]
-    start = "2022-04-20"
+    start = "2022-04-21"
     end = "2022-04-25"
+
+    [split.all]
+    start = "2022-03-29"
+    end = "2022-06-27"
 

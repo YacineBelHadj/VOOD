@@ -1,0 +1,21 @@
+[model_params]
+    [model_params.model1]
+    num_positions = 4
+    num_directions = 3
+    dense_layers = [1024, 248, 128, 128, 64, 64, 32, 20, 12]
+    dropout_rate = 0.0
+    batch_norm = true
+    activation = "relu"
+    l1_reg = 0.01
+    temperature = 1
+    
+[training]
+    [training.params1]
+    energy_loss = 0.01
+    momentum = 0.9
+    save = "./best_model"
+    weight_decay = 0.0005
+    learning_rate = 0.01
+    T_mult = 4
+    batch_size = 64
+    epochs = 100

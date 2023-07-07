@@ -107,3 +107,6 @@ ENV/
 
 # Ignore dynaconf secret files
 .secrets.*
+# logs and models
+logs/
+best_model/

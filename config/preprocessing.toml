@@ -1,0 +1,8 @@
+[psd]
+    [psd.option1]
+    frame_size = 300
+    frame_step = 240
+    fs = 250
+    cut_off_freq = 50
+    psd_nperseg = 8192
+    filter_order = 4
